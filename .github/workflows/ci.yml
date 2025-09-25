@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Install Node deps
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+      - run: npm i -D solhint prettier prettier-plugin-solidity
+
+      - name: Install Slither
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install slither-analyzer
+
+      - name: Install Forge deps
+        run: |
+          forge install openzeppelin/openzeppelin-contracts@v5.0.2 --no-commit
+
+      - name: Lint
+        run: |
+          npx prettier --check "contracts/**/*.sol"
+          npx solhint "contracts/**/*.sol"
+
+      - name: Test
+        run: forge test -vvv --gas-report
+
+      - name: Coverage
+        run: forge coverage
+
+      - name: Slither
+        run: slither . --exclude-informational --solc-remaps "$(tr '\n' ',' < remappings.txt)"

@@ -1,0 +1,17 @@
+{
+  "extends": "solhint:recommended",
+  "rules": {
+    "import-path-check": "off",
+    "immutable-vars-naming": "off",
+    "gas-custom-errors": "off",
+    "gas-indexed-events": "off",
+    "gas-strict-inequalities": "off",
+    "avoid-low-level-calls": "off",
+    "compiler-version": "off",
+    "reason-string": "off",
+    "no-empty-blocks": "off",
+    "one-contract-per-file": "off",
+    "func-visibility": ["warn", { "ignoreConstructors": true }],
+    "use-natspec": "warn"
+  }
+}
