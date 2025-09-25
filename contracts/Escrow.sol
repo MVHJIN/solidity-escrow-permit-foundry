@@ -4,24 +4,24 @@ pragma solidity ^0.8.24;
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {Errors} from "./utils/Errors.sol";
 
-/// @title Escrow simple à 2 parties avec deadline / @author Mehdi / @notice Le payer dépose; le payee retire si 
-//approuvé ou après la deadline; sinon le payer peut refund.
+/// @title Escrow simple à 2 parties avec DEADLINE / @author Mehdi / @notice Le PAYER dépose; le PAYEE retire si 
+//approuvé ou après la DEADLINE; sinon le PAYER peut refund.
 
 /**
- * @title Simple time-based escrow with payer approval
+ * @title Simple time-based escrow with PAYER approval
  * @notice Flow:
- * - payer deploys or is set at construction
- * - payer funds via deposit(amount)
- * - payee can withdraw if payer approved OR after deadline
- * - payer can refund before approval and after deadline
+ * - PAYER deploys or is set at construction
+ * - PAYER funds via deposit(amount)
+ * - PAYEE can withdraw if PAYER approved OR after DEADLINE
+ * - PAYER can refund before approval and after DEADLINE
  */
 contract Escrow is ReentrancyGuard {
     using Errors for *;
 
 // --- ETATS ---------------------------------------------------------------------------------
-    address public immutable payer;
-    address public immutable payee;
-    uint64 public immutable deadline; // unix timestamp (seconds)
+    address public immutable PAYER;
+    address public immutable PAYEE;
+    uint64 public immutable DEADLINE; // unix timestamp (seconds)
 
 /* solhint-disable use-natspec */
 // --- EVENEMENTS ----------------------------------------------------------------------------
@@ -32,7 +32,7 @@ contract Escrow is ReentrancyGuard {
 
     uint256 public amount; // wei to be released
     bool public funded; // true after deposit
-    bool public approved; // set by payer
+    bool public approved; // set by PAYER
 /* solhint-enable use-natspec */
 
 /// @param _payer adresse qui déposera les fonds
@@ -40,33 +40,33 @@ contract Escrow is ReentrancyGuard {
 /// @param _deadline timestamp (secondes) de la limite
 constructor(address _payer, address _payee, uint64 _deadline) {
     require(_payer != address(0) && _payee != address(0), "zero addr");
-    payer = _payer;
-    payee = _payee;
-    deadline = _deadline;
+    PAYER = _payer;
+    PAYEE = _payee;
+    DEADLINE = _deadline;
 
     }
 
     modifier onlyPayer() {
-        if (msg.sender != payer) revert Errors.NotPayer();
+        if (msg.sender != PAYER) revert Errors.NotPayer();
         _;
     }
 
     modifier onlyPayee() {
-        if (msg.sender != payee) revert Errors.NotPayee();
+        if (msg.sender != PAYEE) revert Errors.NotPayee();
         _;
     }
 
-/// @notice Le payer dépose des fonds avant la deadline (une seule fois)
+/// @notice Le PAYER dépose des fonds avant la DEADLINE (une seule fois)
     function deposit() external payable onlyPayer {
         if (msg.value == 0) revert Errors.ZeroAmount();
         if (funded) revert Errors.AlreadyFunded();
-        if (block.timestamp > deadline) revert Errors.DeadlinePassed();
+        if (block.timestamp > DEADLINE) revert Errors.DeadlinePassed();
         amount = msg.value;
         funded = true;
         emit Deposited(msg.sender, msg.value);
     }
 
-/// @notice Le payer approuve le retrait du payee
+/// @notice Le PAYER approuve le retrait du PAYEE
     function approve() external onlyPayer {
         if (!funded) revert Errors.NotFunded();
         if (approved) revert Errors.AlreadyApproved();
@@ -74,31 +74,31 @@ constructor(address _payer, address _payee, uint64 _deadline) {
         emit Approved(msg.sender);
     }
 
-/// @notice Le payee retire si `approved` ou si la deadline est dépassée (protégé contre la réentrance)
+/// @notice Le PAYEE retire si `approved` ou si la DEADLINE est dépassée (protégé contre la réentrance)
     function withdraw() external nonReentrant onlyPayee {
         if (!funded) revert Errors.NotFunded();
-        // payee may withdraw if approved OR after deadline has passed
-        if (!approved && block.timestamp <= deadline) revert Errors.NotApproved();
+        // PAYEE may withdraw if approved OR after DEADLINE has passed
+        if (!approved && block.timestamp <= DEADLINE) revert Errors.NotApproved();
         uint256 toSend = amount;
         amount = 0;
         funded = false;
         approved = false;
-        (bool ok, ) = payee.call{value: toSend}("");
+        (bool ok, ) = PAYEE.call{value: toSend}("");
         require(ok, "transfer failed");
-        emit Withdrawn(payee, toSend);
+        emit Withdrawn(PAYEE, toSend);
     }
 
-/// @notice Le payer se rembourse si deadline passée et pas d’approbation (protégé contre la réentrance)
+/// @notice Le PAYER se rembourse si DEADLINE passée et pas d’approbation (protégé contre la réentrance)
     function refund() external nonReentrant onlyPayer {
         if (!funded) revert Errors.NotFunded();
-        // refund allowed only if NOT approved and deadline reached
+        // refund allowed only if NOT approved and DEADLINE reached
         if (approved) revert Errors.AlreadyApproved();
-        if (block.timestamp < deadline) revert Errors.DeadlineNotReached();
+        if (block.timestamp < DEADLINE) revert Errors.DeadlineNotReached();
         uint256 toSend = amount;
         amount = 0;
         funded = false;
-        (bool ok, ) = payer.call{value: toSend}("");
+        (bool ok, ) = PAYER.call{value: toSend}("");
         require(ok, "refund failed");
-        emit Refunded(payer, toSend);
+        emit Refunded(PAYER, toSend);
     }
 }

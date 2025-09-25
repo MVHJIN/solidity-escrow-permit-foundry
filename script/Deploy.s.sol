@@ -11,13 +11,13 @@ contract DeployEscrow is Script {
         // export PAYER=0x....
         // export PAYEE=0x....
         uint256 pk = vm.envUint("PRIVATE_KEY");
-        address payer = vm.envAddress("PAYER");
-        address payee = vm.envAddress("PAYEE");
+        address PAYER = vm.envAddress("PAYER");
+        address PAYEE = vm.envAddress("PAYEE");
 
-        uint64 deadline = uint64(block.timestamp + 7 days);
+        uint64 DEADLINE = uint64(block.timestamp + 7 days);
 
         vm.startBroadcast(pk);
-        Escrow esc = new Escrow(payer, payee, deadline);
+        Escrow esc = new Escrow(PAYER, PAYEE, DEADLINE);
         vm.stopBroadcast();
 
         // Pour le confort, tu peux logger l'adresse :

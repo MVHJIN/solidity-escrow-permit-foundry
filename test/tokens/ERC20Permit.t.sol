@@ -26,21 +26,21 @@ contract ERC20PermitTest is Test {
     function test_Permit_AllowsTransferFrom() public {
         uint256 value = 123 ether;
         uint256 nonce = token.nonces(owner);
-        uint256 deadline = block.timestamp + 1 days;
+        uint256 DEADLINE = block.timestamp + 1 days;
 
         SigUtils.Permit memory p = SigUtils.Permit({
             owner: owner,
             spender: spender,
             value: value,
             nonce: nonce,
-            deadline: deadline
+            DEADLINE: DEADLINE
         });
 
         bytes32 digest = sigUtils.getTypedDataHash(p);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPk, digest);
 
         // 1) On écrit l'allowance par signature
-        token.permit(owner, spender, value, deadline, v, r, s);
+        token.permit(owner, spender, value, DEADLINE, v, r, s);
         assertEq(token.allowance(owner, spender), value);
 
         // 2) Le spender peut maintenant tirer les fonds
@@ -55,95 +55,95 @@ contract ERC20PermitTest is Test {
     function test_Revert_PermitExpired() public {
         uint256 value = 1 ether;
         uint256 nonce = token.nonces(owner);
-        uint256 deadline = block.timestamp - 1; // déjà expiré
+        uint256 DEADLINE = block.timestamp - 1; // déjà expiré
 
         SigUtils.Permit memory p = SigUtils.Permit({
             owner: owner,
             spender: spender,
             value: value,
             nonce: nonce,
-            deadline: deadline
+            DEADLINE: DEADLINE
         });
 
         bytes32 digest = sigUtils.getTypedDataHash(p);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPk, digest);
 
-        vm.expectRevert(); // deadline expirée
-        token.permit(owner, spender, value, deadline, v, r, s);
+        vm.expectRevert(); // DEADLINE expirée
+        token.permit(owner, spender, value, DEADLINE, v, r, s);
     }
 
     function test_Revert_PermitReplay() public {
         uint256 value = 5 ether;
         uint256 nonce = token.nonces(owner);
-        uint256 deadline = block.timestamp + 1 days;
+        uint256 DEADLINE = block.timestamp + 1 days;
 
         SigUtils.Permit memory p = SigUtils.Permit({
             owner: owner,
             spender: spender,
             value: value,
             nonce: nonce,
-            deadline: deadline
+            DEADLINE: DEADLINE
         });
 
         bytes32 digest = sigUtils.getTypedDataHash(p);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPk, digest);
 
-        token.permit(owner, spender, value, deadline, v, r, s);
+        token.permit(owner, spender, value, DEADLINE, v, r, s);
         assertEq(token.nonces(owner), nonce + 1);
 
         // Rejouer la même signature doit échouer (nonce plus le même)
         vm.expectRevert();
-        token.permit(owner, spender, value, deadline, v, r, s);
+        token.permit(owner, spender, value, DEADLINE, v, r, s);
     }
 function test_Revert_PermitWrongSigner() public {
     uint256 badPk = 0xBADC0DE;
 
     uint256 value = 1 ether;
     uint256 nonce = token.nonces(owner);
-    uint256 deadline = block.timestamp + 1 days;
+    uint256 DEADLINE = block.timestamp + 1 days;
 
     SigUtils.Permit memory p = SigUtils.Permit({
         owner: owner,                 // <- owner réel (pas badOwner)
         spender: spender,
         value: value,
         nonce: nonce,
-        deadline: deadline
+        DEADLINE: DEADLINE
     });
 
     bytes32 digest = sigUtils.getTypedDataHash(p);
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(badPk, digest); // <- MAUVAISE clé
 
     vm.expectRevert();               // signature invalide => revert
-    token.permit(owner, spender, value, deadline, v, r, s);
+    token.permit(owner, spender, value, DEADLINE, v, r, s);
 }
 function test_Permit_NonceMonotonic() public {
     uint256 n0 = token.nonces(owner);
     for (uint i; i < 3; i++) {
         uint256 value = 1 ether;
         uint256 nonce = token.nonces(owner);
-        uint256 deadline = block.timestamp + 1 days;
+        uint256 DEADLINE = block.timestamp + 1 days;
 
         SigUtils.Permit memory p = SigUtils.Permit({
-            owner: owner, spender: spender, value: value, nonce: nonce, deadline: deadline
+            owner: owner, spender: spender, value: value, nonce: nonce, DEADLINE: DEADLINE
         });
 
         bytes32 digest = sigUtils.getTypedDataHash(p);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPk, digest);
-        token.permit(owner, spender, value, deadline, v, r, s);
+        token.permit(owner, spender, value, DEADLINE, v, r, s);
     }
     assertEq(token.nonces(owner), n0 + 3);
 }
 function test_Permit_InfiniteApproval_NotDecremented() public {
     uint256 max = type(uint256).max;
     uint256 nonce = token.nonces(owner);
-    uint256 deadline = block.timestamp + 1 days;
+    uint256 DEADLINE = block.timestamp + 1 days;
 
     SigUtils.Permit memory p = SigUtils.Permit({
-        owner: owner, spender: spender, value: max, nonce: nonce, deadline: deadline
+        owner: owner, spender: spender, value: max, nonce: nonce, DEADLINE: DEADLINE
     });
     bytes32 digest = sigUtils.getTypedDataHash(p);
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPk, digest);
-    token.permit(owner, spender, max, deadline, v, r, s);
+    token.permit(owner, spender, max, DEADLINE, v, r, s);
 
     vm.prank(spender);
      bool ok2 = token.transferFrom(owner, receiver, 100 ether);

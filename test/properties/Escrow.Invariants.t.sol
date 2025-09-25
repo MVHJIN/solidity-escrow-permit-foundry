@@ -5,15 +5,15 @@ import { Test } from "forge-std/Test.sol"; import {Escrow} from "../../contracts
 
 contract EscrowInvariants is Test {
     Escrow esc;
-    address payer = address(0xA11CE);
-    address payee = address(0xB0B);
-    uint64 deadline;
+    address PAYER = address(0xA11CE);
+    address PAYEE = address(0xB0B);
+    uint64 DEADLINE;
 
     function setUp() public {
-        deadline = uint64(block.timestamp + 2 days);
-        esc = new Escrow(payer, payee, deadline);
-        vm.deal(payer, 1000 ether);
-        vm.deal(payee, 1 ether);
+        DEADLINE = uint64(block.timestamp + 2 days);
+        esc = new Escrow(PAYER, PAYEE, DEADLINE);
+        vm.deal(PAYER, 1000 ether);
+        vm.deal(PAYEE, 1 ether);
     }
 
     // Invariant simple d'intégrité : le solde du contrat ne doit pas être négatif

@@ -5,9 +5,9 @@ pragma solidity ^0.8.24;
 contract SigUtils {
     bytes32 internal domainSeparator;
 
-    // keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)")
+    // keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 DEADLINE)")
     bytes32 public constant PERMIT_TYPEHASH =
-        keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
+        keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 DEADLINE)");
 
     constructor(bytes32 domainSeparator_) {
         domainSeparator = domainSeparator_;
@@ -18,7 +18,7 @@ contract SigUtils {
         address spender;
         uint256 value;
         uint256 nonce;
-        uint256 deadline;
+        uint256 DEADLINE;
     }
 
     function getTypedDataHash(Permit memory p) external view returns (bytes32) {
@@ -27,7 +27,7 @@ contract SigUtils {
                 "\x19\x01",
                 domainSeparator,
                 keccak256(
-                    abi.encode( PERMIT_TYPEHASH, p.owner, p.spender, p.value, p.nonce, p.deadline
+                    abi.encode( PERMIT_TYPEHASH, p.owner, p.spender, p.value, p.nonce, p.DEADLINE
                     )
                 )
             )
