@@ -1,0 +1,17 @@
+# Foundry
+/out/
+/cache/
+
+# Node / tooling
+node_modules/
+coverage/
+lcov.info
+
+# Secrets
+.env
+.env.*
+
+# OS/editor
+.DS_Store
+Thumbs.db
+*.swp
