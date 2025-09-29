@@ -2,7 +2,8 @@
 pragma solidity ^0.8.24;
 
 import { Test } from "forge-std/Test.sol"; import {MyTokenPermit} from 
-"../../contracts/tokens/MyTokenPermit.sol"; import {SigUtils, IERC20PermitLike} from "../utils/SigUtils.sol";
+"../../contracts/tokens/MyTokenPermit.sol";
+import { SigUtils } from "../utils/SigUtils.sol";
 
 contract ERC20PermitTest is Test {
     MyTokenPermit token;
@@ -19,7 +20,7 @@ contract ERC20PermitTest is Test {
         ownerPk = 0xA11CE;
         owner = vm.addr(ownerPk);
         token = new MyTokenPermit("MyToken", "MTK", initialSupply, owner);
-        sigUtils = new SigUtils(IERC20PermitLike(address(token)));
+        sigUtils = new SigUtils(token)));
         vm.deal(owner, 10 ether);
     }
 
