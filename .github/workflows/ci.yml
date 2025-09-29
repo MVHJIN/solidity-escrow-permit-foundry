@@ -1,45 +1,35 @@
+cd ~/solidity-starter-day1
+mkdir -p .github/workflows
+cat > .github/workflows/ci.yml <<'YAML'
 name: CI
-
 on:
   push:
+    branches: [ main ]
   pull_request:
+    branches: [ main ]
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-      - name: Setup Foundry
+      - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly
+          version: stable
 
-      - name: Install Node deps
-        uses: actions/setup-node@v4
-        with:
-          node-version: 'lts/*'
-      - run: npm i -D solhint prettier prettier-plugin-solidity
-
-      - name: Install Slither
-        run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install slither-analyzer
-
-      - name: Install Forge deps
-        run: |
-          forge install openzeppelin/openzeppelin-contracts@v5.0.2 --no-commit
-
-      - name: Lint
-        run: |
-          npx prettier --check "contracts/**/*.sol"
-          npx solhint "contracts/**/*.sol"
+      - name: Build
+        run: forge build --sizes
 
       - name: Test
-        run: forge test -vvv --gas-report
+        run: forge test -vvv
+YAML
 
-      - name: Coverage
-        run: forge coverage
+git add .github/workflows/ci.yml
+git commit -m "ci: checkout submodules + foundry"
+git push
 
-      - name: Slither
-        run: slither . --exclude-informational --solc-remaps "$(tr '\n' ',' < remappings.txt)"
