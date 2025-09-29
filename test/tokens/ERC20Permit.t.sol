@@ -33,7 +33,7 @@ contract ERC20PermitTest is Test {
             spender: spender,
             value: value,
             nonce: nonce,
-            DEADLINE: DEADLINE
+            deadline: DEADLINE
         });
 
         bytes32 digest = sigUtils.getTypedDataHash(p);
@@ -62,7 +62,7 @@ contract ERC20PermitTest is Test {
             spender: spender,
             value: value,
             nonce: nonce,
-            DEADLINE: DEADLINE
+            deadline: DEADLINE
         });
 
         bytes32 digest = sigUtils.getTypedDataHash(p);
@@ -82,7 +82,7 @@ contract ERC20PermitTest is Test {
             spender: spender,
             value: value,
             nonce: nonce,
-            DEADLINE: DEADLINE
+            deadline: DEADLINE
         });
 
         bytes32 digest = sigUtils.getTypedDataHash(p);
@@ -107,7 +107,7 @@ function test_Revert_PermitWrongSigner() public {
         spender: spender,
         value: value,
         nonce: nonce,
-        DEADLINE: DEADLINE
+        deadline: DEADLINE
     });
 
     bytes32 digest = sigUtils.getTypedDataHash(p);
@@ -124,7 +124,7 @@ function test_Permit_NonceMonotonic() public {
         uint256 DEADLINE = block.timestamp + 1 days;
 
         SigUtils.Permit memory p = SigUtils.Permit({
-            owner: owner, spender: spender, value: value, nonce: nonce, DEADLINE: DEADLINE
+            owner: owner, spender: spender, value: value, nonce: nonce, deadline: DEADLINE
         });
 
         bytes32 digest = sigUtils.getTypedDataHash(p);
@@ -139,7 +139,7 @@ function test_Permit_InfiniteApproval_NotDecremented() public {
     uint256 DEADLINE = block.timestamp + 1 days;
 
     SigUtils.Permit memory p = SigUtils.Permit({
-        owner: owner, spender: spender, value: max, nonce: nonce, DEADLINE: DEADLINE
+        owner: owner, spender: spender, value: max, nonce: nonce, deadline: DEADLINE
     });
     bytes32 digest = sigUtils.getTypedDataHash(p);
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPk, digest);
