@@ -1,3 +1,6 @@
+![CI](https://img.shields.io/github/actions/workflow/status/MVHJIN/solidity-escrow-permit-foundry/ci.yml?branch=main)
+![Release](https://img.shields.io/github/v/release/MVHJIN/solidity-escrow-permit-foundry)
+![License](https://img.shields.io/github/license/MVHJIN/solidity-escrow-permit-foundry)
 # Solidity Starter — Day 1 (Foundry + CI + Lint + Escrow)
 
 **Objectif jour 1** : prendre en main Foundry, écrire/faire tourner des tests, et livrer un petit contrat **Escrow** orienté sécurité avec events, erreurs custom, et garde reentrancy.
