@@ -8,11 +8,15 @@ on:
   workflow_dispatch: {}
 
 jobs:
-  # ✅ Job requis par la règle de branche (ne tourne QUE sur pull_request)
+  # ✅ Job requis côté PR
   pr-required:
     name: required
     if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+      statuses: write   # <-- important pour publier le status legacy
     steps:
       - name: Checkout (with submodules)
         uses: actions/checkout@v4
@@ -34,7 +38,26 @@ jobs:
       - name: Test
         run: forge test -vvv --gas-report
 
-  # 👇 Job pour les pushes (utile mais NON requis)
+      # 🔧 Compatibilité: publier aussi le "status" attendu par la règle
+      - name: Mark legacy status (success)
+        if: ${{ success() }}
+        run: |
+          curl -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.sha }} \
+            -d '{"state":"success","context":"Foundry CI / required (pull_request)","description":"Workflow passed","target_url":"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}'
+
+      - name: Mark legacy status (failure)
+        if: ${{ failure() }}
+        run: |
+          curl -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.sha }} \
+            -d '{"state":"failure","context":"Foundry CI / required (pull_request)","description":"Workflow failed","target_url":"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}'
+
+  # 👇 Job push (non requis)
   push-ci:
     name: push
     if: ${{ github.event_name == 'push' }}
