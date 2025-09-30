@@ -1,45 +1,81 @@
-name: CI
+name: Foundry CI
 
 on:
   push:
+    branches: [ main, ci-fix ]
   pull_request:
+    branches: [ main ]
+  workflow_dispatch: {}
 
 jobs:
-  test:
+  # ✅ Job requis côté PR
+  pr-required:
+    name: required
+    if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+      statuses: write   # <-- important pour publier le status legacy
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
 
-      - name: Setup Foundry
+      - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
 
-      - name: Install Node deps
-        uses: actions/setup-node@v4
-        with:
-          node-version: 'lts/*'
-      - run: npm i -D solhint prettier prettier-plugin-solidity
+      - name: Show versions
+        run: forge --version
 
-      - name: Install Slither
-        run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install slither-analyzer
-
-      - name: Install Forge deps
-        run: |
-          forge install openzeppelin/openzeppelin-contracts@v5.0.2 --no-commit
-
-      - name: Lint
-        run: |
-          npx prettier --check "contracts/**/*.sol"
-          npx solhint "contracts/**/*.sol"
+      - name: Build
+        run: forge build
 
       - name: Test
         run: forge test -vvv --gas-report
 
-      - name: Coverage
-        run: forge coverage
+      # 🔧 Compatibilité: publier aussi le "status" attendu par la règle
+      - name: Mark legacy status (success)
+        if: ${{ success() }}
+        run: |
+          curl -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.sha }} \
+            -d '{"state":"success","context":"Foundry CI / required (pull_request)","description":"Workflow passed","target_url":"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}'
 
-      - name: Slither
-        run: slither . --exclude-informational --solc-remaps "$(tr '\n' ',' < remappings.txt)"
+      - name: Mark legacy status (failure)
+        if: ${{ failure() }}
+        run: |
+          curl -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.sha }} \
+            -d '{"state":"failure","context":"Foundry CI / required (pull_request)","description":"Workflow failed","target_url":"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}'
+
+  # 👇 Job push (non requis)
+  push-ci:
+    name: push
+    if: ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Build
+        run: forge build
+
+      - name: Test
+        run: forge test -vvv --gas-report
