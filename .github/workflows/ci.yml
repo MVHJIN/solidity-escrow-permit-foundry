@@ -1,16 +1,17 @@
 name: Foundry CI
 
-'on':
+on:
   push:
-    branches:
-      - main
-      - ci-fix
+    branches: [ main, ci-fix ]
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
   workflow_dispatch: {}
 
-jobs: name: required test:
+jobs:
+  # ✅ Job requis par la règle de branche (ne tourne QUE sur pull_request)
+  pr-required:
+    name: required
+    if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout (with submodules)
@@ -33,3 +34,25 @@ jobs: name: required test:
       - name: Test
         run: forge test -vvv --gas-report
 
+  # 👇 Job pour les pushes (utile mais NON requis)
+  push-ci:
+    name: push
+    if: ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Build
+        run: forge build
+
+      - name: Test
+        run: forge test -vvv --gas-report
