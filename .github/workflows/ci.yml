@@ -10,8 +10,7 @@ name: Foundry CI
       - main
   workflow_dispatch: {}
 
-jobs:
-  test:
+jobs: name: required test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout (with submodules)
