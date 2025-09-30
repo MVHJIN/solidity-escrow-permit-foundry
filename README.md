@@ -1,5 +1,5 @@
 ![CI](https://img.shields.io/github/actions/workflow/status/MVHJIN/solidity-escrow-permit-foundry/ci.yml?branch=main)
-![Release](https://img.shields.io/github/v/release/MVHJIN/solidity-escrow-permit-foundry)
+[![release](https://img.shields.io/github/v/release/MVHJIN/solidity-escrow-permit-foundry?include_prereleases&sort=semver)](https://github.com/MVHJIN/solidity-escrow-permit-foundry/releases)
 ![License](https://img.shields.io/github/license/MVHJIN/solidity-escrow-permit-foundry)
 # Solidity Starter — Day 1 (Foundry + CI + Lint + Escrow)
 
